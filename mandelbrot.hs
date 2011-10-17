@@ -19,7 +19,7 @@ mandelbrotCU image (x1, y1) (x2, y2) (xc, yc) scale maxiter = do
         --xp x = xc-((fromIntegral x2 + fromIntegral x1)/2-(fromIntegral x2 - fromIntegral x))*scale
         --yp y = yc+((fromIntegral y2 + fromIntegral y1)/2-(fromIntegral y2 - fromIntegral y))*scale
           xp x = (fromIntegral x - ((fromIntegral x2 + fromIntegral x1)/2))*scale + xc
-          yp y = (fromIntegral y - ((fromIntegral y2 + fromIntegral y1)/2))*scale + yc
+          yp y = (fromIntegral y - ((fromIntegral y2 + fromIntegral y1)/2))*scale - yc
 
 chunks :: [a] -> Int -> [[a]]
 chunks list size
@@ -33,7 +33,7 @@ mandelbrot :: Image -> (Float, Float) -> Float -> Int -> IO ()
 mandelbrot image (cx, cy) scale maxiter = do
     (w, h) <- imageSize image
     -- Calculate each 20 lines in parallel
-    parallel_ [mandelbrotCU image (0, y1) (w-1, y2) (cx, cy - (fromIntegral h)/2*scale + (fromIntegral y2 + fromIntegral y1) / 2 * scale) scale maxiter | (y1, y2) <- ranges [0..h-1] 20]
+    parallel_ [mandelbrotCU image (0, y1) (w-1, y2) (cx, cy + (fromIntegral h)/2*scale - (fromIntegral y2 + fromIntegral y1) / 2 * scale) scale maxiter | (y1, y2) <- ranges [0..h-1] 20]
 
 main = do
     image <- newImage (800, 800)
