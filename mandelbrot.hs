@@ -35,7 +35,7 @@ inTheSetW (x1, x2) (c1, c2) maxiter
 -- number, and it's the size of one pixel on the complex plane.
 mandelbrotCU :: Image -> (Int, Int) -> (Int, Int) -> (Double, Double) -> Double -> Int -> IO ()
 mandelbrotCU image (x1, y1) (x2, y2) (xc, yc) scale maxiter = do
-    mapM_ (\(x, y) -> setPixel (x, y) (if inTheSet (xp x, yp y) maxiter then 0x000000 else 0xffffff) image) [(x, y)|x <- [x1..x2], y <- [y1..y2]]
+    mapM_ (\(x, y) -> setPixel (x, y) 0xffffff image) [(x, y) | x <- [x1..x2], y <- [y1..y2], not $ inTheSet (xp x, yp y) maxiter]
     where
           xp x = (fromIntegral x - ((fromIntegral x2 + fromIntegral x1)/2))*scale + xc
           yp y = (fromIntegral y - ((fromIntegral y2 + fromIntegral y1)/2))*scale - yc
@@ -60,6 +60,6 @@ mandelbrot image (cx, cy) scale maxiter = do
 
 main = do
     image <- newImage (800, 800)
-    mandelbrot image (-0.7, 0) 0.004 5000
+    mandelbrot image (-0.7, 0) 0.004 10000
     stopGlobalPool
     savePngFile "mandelbrot.png" image
