@@ -2,8 +2,14 @@ import Graphics.GD
 import Control.Concurrent.ParallelIO
 
 -- Function for determining if a complex number is in the set
-inTheSet :: (Num a, Ord a) => (a, a) -> Int -> Bool
-inTheSet x maxiter = inTheSetW (0, 0) x maxiter
+-- Uses checks for the main cardioid and the period-2 bulb, and
+-- uses the escape time algorithm
+inTheSet :: (Double, Double) -> Int -> Bool
+inTheSet (x1, x2) maxiter
+    | x1 < p-2*p*p+1/4 || (x1+1)*(x1+1) + x2*x2 < 1/16 = True
+    | otherwise = inTheSetW (0, 0) (x1, x2) maxiter
+    where
+        p = sqrt ((x1-1/4)*(x1-1/4)+x2*x2)
 
 -- A number is in the set if the x(n+1) = x(n)^2 + c, x(0) = 0
 -- series is bounded. A point is certainly not in the set, when
@@ -11,7 +17,7 @@ inTheSet x maxiter = inTheSetW (0, 0) x maxiter
 -- limit (maxiter) to see, if there is a value whose abs. is > 2.
 -- If there is, the point is not in the set, if there is none,
 -- it _probably_ is.
-inTheSetW :: (Num a, Ord a) => (a, a) -> (a, a) -> Int -> Bool
+inTheSetW :: (Double, Double) -> (Double, Double) -> Int -> Bool
 inTheSetW (x1, x2) (c1, c2) maxiter
     | flew_away    = False
     | maxiter <= 0 = not flew_away
@@ -24,7 +30,7 @@ inTheSetW (x1, x2) (c1, c2) maxiter
 -- right corners' coordinates respectively. The center is a complex
 -- number at the center of the image. The scale is a positive real
 -- number, and it's the size of one pixel on the complex plane.
-mandelbrotCU :: Image -> (Int, Int) -> (Int, Int) -> (Float, Float) -> Float -> Int -> IO ()
+mandelbrotCU :: Image -> (Int, Int) -> (Int, Int) -> (Double, Double) -> Double -> Int -> IO ()
 mandelbrotCU image (x1, y1) (x2, y2) (xc, yc) scale maxiter = do
     mapM_ (\(x, y) -> setPixel (x, y) (if inTheSet (xp x, yp y) maxiter then 0x000000 else 0xffffff) image) [(x, y)|x <- [x1..x2], y <- [y1..y2]]
     where
@@ -43,11 +49,11 @@ ranges list size = map (\x -> (head x, last x)) (chunks list size)
 
 -- Renders a mandelbrot set onto a GD image. The center, scale and
 -- maxiter parameters are described at mandelbrotCU
-mandelbrot :: Image -> (Float, Float) -> Float -> Int -> IO ()
+mandelbrot :: Image -> (Double, Double) -> Double -> Int -> IO ()
 mandelbrot image (cx, cy) scale maxiter = do
     (w, h) <- imageSize image
-    -- Calculate each 20 lines in parallel
-    parallel_ [mandelbrotCU image (0, y1) (w-1, y2) (cx, cy + (fromIntegral h)/2*scale - (fromIntegral y2 + fromIntegral y1) / 2 * scale) scale maxiter | (y1, y2) <- ranges [0..h-1] 20]
+    -- Calculate each 100 lines in parallel
+    parallel_ [mandelbrotCU image (0, y1) (w-1, y2) (cx, cy + (fromIntegral h)/2*scale - (fromIntegral y2 + fromIntegral y1) / 2 * scale) scale maxiter | (y1, y2) <- ranges [0..h-1] 100]
 
 main = do
     image <- newImage (800, 800)

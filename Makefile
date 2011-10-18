@@ -1,5 +1,5 @@
 mandelbrot: mandelbrot.hs
-	ghc -O2 -rtsopts -threaded --make mandelbrot.hs
+	ghc -O3 -rtsopts -threaded --make mandelbrot.hs
 
 .PHONY: clean
 
