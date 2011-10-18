@@ -6,10 +6,11 @@ import Control.Concurrent.ParallelIO
 -- uses the escape time algorithm
 inTheSet :: (Double, Double) -> Int -> Bool
 inTheSet (x1, x2) maxiter
-    | x1 < p-2*p*p+1/4 || (x1+1)*(x1+1) + x2*x2 < 1/16 = True
+    | x1 < sqrt p-2*p+1/4 || (x1+1)*(x1+1) + x2_2 < 1/16 = True
     | otherwise = inTheSetW (0, 0) (x1, x2) maxiter
     where
-        p = sqrt ((x1-1/4)*(x1-1/4)+x2*x2)
+        p = ((x1-1/4)*(x1-1/4)+x2_2)
+        x2_2 = x2*x2
 
 -- A number is in the set if the x(n+1) = x(n)^2 + c, x(0) = 0
 -- series is bounded. A point is certainly not in the set, when
@@ -21,9 +22,11 @@ inTheSetW :: (Double, Double) -> (Double, Double) -> Int -> Bool
 inTheSetW (x1, x2) (c1, c2) maxiter
     | flew_away    = False
     | maxiter <= 0 = not flew_away
-    | otherwise    = inTheSetW (x1*x1-x2*x2+c1, 2*x1*x2+c2) (c1, c2) (maxiter-1)
+    | otherwise    = inTheSetW (x1_2-x2_2+c1, 2*x1*x2+c2) (c1, c2) (maxiter-1)
     where
-        flew_away = x1*x1+x2*x2 > 4
+        flew_away = x1_2+x2_2 > 4
+        x1_2 = x1*x1
+        x2_2 = x2*x2
 
 -- Compute a rectangle part of the image. The sides are parallel to the
 -- image's sides. The rectangle is given with the upper left and lower
@@ -52,8 +55,8 @@ ranges list size = map (\x -> (head x, last x)) (chunks list size)
 mandelbrot :: Image -> (Double, Double) -> Double -> Int -> IO ()
 mandelbrot image (cx, cy) scale maxiter = do
     (w, h) <- imageSize image
-    -- Calculate each 100 lines in parallel
-    parallel_ [mandelbrotCU image (0, y1) (w-1, y2) (cx, cy + (fromIntegral h)/2*scale - (fromIntegral y2 + fromIntegral y1) / 2 * scale) scale maxiter | (y1, y2) <- ranges [0..h-1] 100]
+    -- Calculate each 200 lines in parallel
+    parallel_ [mandelbrotCU image (0, y1) (w-1, y2) (cx, cy + (fromIntegral h)/2*scale - (fromIntegral y2 + fromIntegral y1) / 2 * scale) scale maxiter | (y1, y2) <- ranges [0..h-1] 200]
 
 main = do
     image <- newImage (800, 800)
