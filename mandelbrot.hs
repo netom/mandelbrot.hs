@@ -55,8 +55,8 @@ ranges list size = map (\x -> (head x, last x)) (chunks list size)
 mandelbrot :: Image -> (Double, Double) -> Double -> Int -> IO ()
 mandelbrot image (cx, cy) scale maxiter = do
     (w, h) <- imageSize image
-    -- Calculate each 200 lines in parallel
-    parallel_ [mandelbrotCU image (0, y1) (w-1, y2) (cx, cy + (fromIntegral h)/2*scale - (fromIntegral y2 + fromIntegral y1) / 2 * scale) scale maxiter | (y1, y2) <- ranges [0..h-1] 200]
+    -- Calculate each 100 lines in parallel
+    parallel_ [mandelbrotCU image (0, y1) (w-1, y2) (cx, cy + (fromIntegral h)/2*scale - (fromIntegral y2 + fromIntegral y1) / 2 * scale) scale maxiter | (y1, y2) <- ranges [0..h-1] 100]
 
 main = do
     image <- newImage (800, 800)
